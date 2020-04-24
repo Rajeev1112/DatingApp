@@ -15,7 +15,7 @@
 
     <div *ngIf="loggedIn()" class="dropdown" dropdown>
       <span>
-        <img src="{{photoUrl}}" alt="">
+        <img src="{{photoUrl || '../../assets/User.png'}}" alt="">
       </span>
       
       <a class="dropdown-toggle text-light" dropdownToggle>
