@@ -26,6 +26,11 @@ namespace DatingApp.API.Data
             _context.Remove(entiry);
         }
 
+        public async Task<Like> GetLike(int userId, int recipientId)
+        {
+            return await _context.Likes.FirstOrDefaultAsync(x => x.LikerId == userId && x.LikeeId == recipientId);
+        }
+
         public async Task<Photo> GetMainPhoto(int userId)
         {
             return await _context.Photos.Where(u => u.UserId == userId).FirstOrDefaultAsync(p => p.IsMain);
@@ -47,6 +52,18 @@ namespace DatingApp.API.Data
         {
             var users = _context.Users.Include(x => x.Photos).OrderByDescending(x => x.LastActive).AsQueryable();
             users = users.Where(x => x.Id != userParam.UserId && x.Gender == userParam.Gender);
+
+            if(userParam.Liker)
+            {
+                var userLikers = await GetUserLikes(userParam.UserId, userParam.Liker, userParam.Likee);
+                users = users.Where( x => userLikers.Contains(x.Id));
+            }
+            if(userParam.Likee)
+            {
+                var userLikees = await GetUserLikes(userParam.UserId, userParam.Liker, userParam.Likee);
+                users = users.Where( x => userLikees.Contains(x.Id));
+            }
+
             if(userParam.MinAge !=18 || userParam.MaxAge !=99)
             {
                 var MinDob = DateTime.Now.AddYears(-userParam.MaxAge -1);
@@ -72,6 +89,23 @@ namespace DatingApp.API.Data
         {
             var val = await _context.SaveChangesAsync();
             return val > 0;
+        }
+
+        private async Task<IEnumerable<int>> GetUserLikes(int Id, bool liker, bool likee)
+        {
+            var users = await _context.Users
+            .Include(x => x.Likers)
+            .Include(x => x.Likees)
+            .FirstOrDefaultAsync(x => x.Id == Id);
+
+            if(liker)
+            {
+                return users.Likers.Where(x => x.LikeeId == Id).Select(x => x.LikerId);
+            }
+            else
+            {
+                return users.Likees.Where(x => x.LikerId == Id).Select(x => x.LikeeId);
+            }
         }
     }
 }
