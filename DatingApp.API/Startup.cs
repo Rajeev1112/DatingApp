@@ -80,7 +80,17 @@ namespace DatingApp.API
             // seeder.SeedData();
             app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
             app.UseAuthentication();
-            app.UseMvc();
+            app.UseDefaultFiles();
+            app.UseStaticFiles();
+            app.UseMvc(route => {
+                route.MapSpaFallbackRoute(
+                    name: "spa-fallback",
+                    defaults: new {
+                        controller = "FallBack",
+                        action = "Index"
+                    }
+                );
+            });
         }
     }
 }
